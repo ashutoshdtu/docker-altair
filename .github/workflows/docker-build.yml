@@ -1,0 +1,49 @@
+name: Docker Build and Push
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_ACCESS_TOKEN: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Docker
+      run: curl -fsSL https://get.docker.com | sh
+
+    - name: Enable Docker Experimental Features
+      run: |
+        echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+        mkdir -p $HOME/.docker
+        echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+        sudo service docker start
+
+    - name: Docker Login
+      run: |
+        if [ ! -z "${DOCKERHUB_USERNAME}" ]; then
+          echo "${DOCKERHUB_ACCESS_TOKEN}" | docker login --username "${DOCKERHUB_USERNAME}" --password-stdin
+        fi
+
+    - name: Docker Version
+      run: docker --version
+
+    - name: Run linuxkit/binfmt
+      run: docker run --rm --privileged linuxkit/binfmt:v0.8
+
+    - name: Create Docker Buildx
+      run: docker buildx create --use
+
+    - name: List Docker Processes and Buildx
+      run: docker ps; docker buildx ls
+
+    - name: Build and Push Docker Image
+      run: docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/altair:${GITHUB_REF##*/} ./ --push
