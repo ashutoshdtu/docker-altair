@@ -1,8 +1,5 @@
 FROM node:18-alpine3.16 as build
 
-ARG NPM_TOKEN
-ENV NPM_TOKEN=${NPM_TOKEN}
-
 WORKDIR app
 
 COPY ./app/.npmrc /app/.npmrc
