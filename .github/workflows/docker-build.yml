@@ -46,4 +46,4 @@ jobs:
       run: docker ps; docker buildx ls
 
     - name: Build and Push Docker Image
-      run: docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/altair:${GITHUB_REF##*/} ./ --push
+      run: docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t ${DOCKERHUB_USERNAME}/altair:${GITHUB_REF##*/} ./ --push
